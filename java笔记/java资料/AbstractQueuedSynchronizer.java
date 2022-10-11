@@ -497,7 +497,7 @@ public abstract class AbstractQueuedSynchronizer
 
         //首先调用tryAcquire方法，调用此方法的线程会试图在独占模式下获取对象状态。
         // 此方法应该查询是否允许它在独占模式下获取对象状态，如果允许，则获取它。在 AbstractQueuedSynchronizer源码中默认会抛出一个异常，即需要子类去重写此方法完成自己的逻辑。之后会进行分析。
-        // 若tryAcquire失败，则调用addWaiter方法，addWaiter方法完成的功能是将调用此方法的线程封装成为一个结点并放入Sync queue。
+        // 若tryAcquire失败，则调用addWaiter方法，addWaiter方法完成的功能是将调用此方法的线程封装成为一个结点并放入Sync queue。返回这个节点(不是队首)
         // 调用acquireQueued方法，此方法完成的功能是Sync queue中的结点不断尝试获取资源，若成功，则返回true，否则，返回false。
         // 由于tryAcquire默认实现是抛出异常，所以此时，不进行分析，之后会结合一个例子进行分析。
         if (!tryAcquire(arg) &&

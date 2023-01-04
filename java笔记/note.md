@@ -1,79 +1,3 @@
-# **java并发**
-
-## java并发体系
-
-<img src="./images/java并发体系.png" width="100%" align="center" ></img>
-
-## 并发理论基础
-
-### 为什么需要多线程
-
-CPU、内存、I/O 设备的速度是有极大差异的，为了合理利用 CPU 的高性能，平衡这三者的速度差异，计算机体系结构、操作系统、编译程序都做出了贡献，主要体现为:
-
-- CPU 增加了缓存，以均衡与内存的速度差异；// 导致 `可见性`问题
-- 操作系统增加了进程、线程，以分时复用 CPU，进而均衡 CPU 与 I/O 设备的速度差异；// 导致 `原子性`问题
-- 编译程序优化指令执行次序，使得缓存能够得到更加合理地利用。// 导致 `有序性`问题
-
-### JMM内存模型
-
-### ![avatar](./images/JMM.png)
-
-### volatile作用和原理
-
-#### 作用：
-
-保证可见性和顺序性（防止指令重排序），但是无法保证原子性
-
-#### 可见性原理
-
-​    编译之后会多出两行汇编代码，lock为前缀的代码会做两件事
-
-​    1：将cpu缓存写到内存
-
-​    2：这个写回内存的操作会使在其他CPU里缓存了该内存地址的数据无效。
-
-#### 防止重排序原理
-
-哪里会出现指令重排序
-
-​	内存屏障。
-
-#### **原子性的解决**
-
-​	CAS
-
-### Synchronized
-
-#### 作用
-
-​	可以对对象，实例方法，静态方法加锁
-
-#### 原理
-
-通过mornitorenter和mornitorexit实现
-
-对对象加锁时，如果锁计数器为0，表示对象可以加锁，锁计数器+1。
-
-释放锁时，锁计数器-1。
-
-![avatar](./images/synchronized原理.png)
-
-
-
-
-
-
-
-volatile和synchronized的区别
-
-lock和synchronized的区别
-
-
-
-
-
-
-
 # JVM
 
 ## 内存区域
@@ -128,7 +52,15 @@ lock和synchronized的区别
 - **设置对象头**：然后虚拟机要对对象进行必要的设置，例如这个对象是哪个类的实例、如何才能找到类的元数据信息、对象的哈希码、对象的GC分代年龄等信息。这些信息存放在对象的对象头（Object Header）之中。根据虚拟机当前的运行状态的不同，如是否启用偏向锁等，对象头会有不同的设置方式。
 - **执行init方法**：把对象按照程序员的意愿进行初始化，这样一个真正可用的对象才算完全产生出来。 
 
+## 对象的访问
 
+### 句柄方式
+
+![image-20221012151443290](images/image-20221012151443290.png)
+
+### 指针方式
+
+![image-20221012151522849](images/image-20221012151522849.png)
 
 ## 对象的内存布局 
 
@@ -808,349 +740,83 @@ https://blog.51cto.com/u_15072763/4011567
 
 **3.万一我们突然分配了一个超级大的对象，大到啥程度？新生代找不到连续内存空间来存放，此时咋整？**
 
+# **java并发**
 
+## java并发体系
 
-# **数据库**
+<img src="./images/java并发体系.png" width="100%" align="center" ></img>
 
-[ 一文详解脏读、不可重复读、幻读 ]（https://baijiahao.baidu.com/s?id=1717095300761675602&wfr=spider&for=pc）
+## 并发理论基础
 
-**脏读：**
+### 为什么需要多线程
 
-脏读又称无效数据的读出，是指在数据库访问中，事务T1将某一值修改，然后事务T2读取该值，此后T1因为某种原因撤销对该值的修改，这就导致了T2所读取到的数据是无效的，值得注意的是，脏读一般是针对于update操作的。
+CPU、内存、I/O 设备的速度是有极大差异的，为了合理利用 CPU 的高性能，平衡这三者的速度差异，计算机体系结构、操作系统、编译程序都做出了贡献，主要体现为:
 
-**不可重复读**
+- CPU 增加了缓存，以均衡与内存的速度差异；// 导致 `可见性`问题
+- 操作系统增加了进程、线程，以分时复用 CPU，进而均衡 CPU 与 I/O 设备的速度差异；// 导致 `原子性`问题
+- 编译程序优化指令执行次序，使得缓存能够得到更加合理地利用。// 导致 `有序性`问题
 
-事务 A 多次读取同一数据，但事务 B 在事务A多次读取的过程中，对数据作了更新并提交，导致事务A，结果 不一致。
+### JMM内存模型
 
-**幻读**
+### ![avatar](./images/JMM.png)
 
-一个事务内部，第一次查询某数据是存在的，下一次查，不存在了，仿佛出现了幻觉。
+### volatile作用和原理
 
+#### 作用：
 
+保证可见性和顺序性（防止指令重排序），但是无法保证原子性
 
-#### 数据库事务的四大特性
+#### 可见性原理
 
-- 原子性:事务的所有SQL操作作为原子工作单元执行，要么全部执行，要么全部不执行；
-  - 实现：通过**undolog**。事务的所有修改操作(增、删、改)的相反操作都会写入undo log,比如事务执行了一条insert语句，那么undo log就会记录一条相应的delete语句。所以undo log是一个逻辑文件，记录的是相应的SQL语句一旦由于故障，导致事务无法成功提交，系统则会执行undo log中相应的撤销操作，达到事务回滚的目的。
+​    编译之后会多出两行汇编代码，lock为前缀的代码会做两件事
 
-- 一致性:事务完成后，所有数据的状态都是一致的，即A账户只要减去了100，B账户则必定加上了100；
+​    1：将cpu缓存写到内存
 
-- 隔离性:如果有多个事务并发执行，每个事务作出的修改必须与其他事务隔离；
+​    2：这个写回内存的操作会使在其他CPU里缓存了该内存地址的数据无效。
 
-  - 可重复读（已提交读）：
+#### 防止重排序原理
 
-    **数据的读取不加锁，数据的写入、修改、删除需要加行锁，可以克服脏读，但无法避免不可重复读**
+哪里会出现指令重排序
 
-    <img src="./images/脏读.jpg" width="40%" align="left" ></img>
+​	内存屏障。
 
-    ​		**使用加锁策略后，T1写数据x时，先获取了x的锁，导致T2的读操作等待，T1进行数据回滚后，释放锁，T2可以继续读取原来数据，不存在读取到脏数据的可能。**
+#### **原子性的解决**
 
-  - 可重复读(允许[幻读](https://so.csdn.net/so/search?q=幻读&spm=1001.2101.3001.7020))
+​	CAS
 
-    实现策略：**MVCC(多个版本行控制)策略**
+### Synchronized
 
-    下图是一个不可重复读的场景。由于T1的更新操作，导致T2两次读取的数据不一致。
+#### 作用
 
-    单纯加行锁是无法解决的，T2先读取x值，T1之后经过加锁、解锁步骤，更新x的值，提交事务。T2再读的话，读出来的是T1更新后的值，两次读取结果不一致。
+​	可以对对象，实例方法，静态方法加锁
 
-    <img src="./images/不可重复读.png" width="40%" align="left" ></img>
+#### 原理
 
-    **MVCC**
+通过mornitorenter和mornitorexit实现
 
-    ​		前面讲的行级锁是一个悲观锁，而MVCC是一个乐观锁，乐观锁在一定程度上可以避免加锁操作，因此开销更低。InnoDB的MVCC实现，是通过保存数据在某个时间点的快照来实现的。一个事务，不管其执行多长时间，其内部看到的数据是一致的。也就是事务在执行的过程中不会相互影响。
+对对象加锁时，如果锁计数器为0，表示对象可以加锁，锁计数器+1。
 
-    具体实现如下：
+释放锁时，锁计数器-1。
 
-    ​		MVCC，通过在每行记录后面保存两个隐藏的列来实现：一个保存了行的创建时间，一个保存行的过期时间（删除时间），当然，这里的时间并不是时间戳，而是系统版本号，每开始一个新的事务，系统版本号就会递增。
+![avatar](./images/synchronized原理.png)
 
-    **selelct**操作只查找版本早于（包含等于）当前事务版本的数据行。可以确保事务读取的行，要么是事务开始前就已存在，或者事务自身插入或修改的记录。行的删除版本要么未定义，要么大于当前事务版本号。可以确保事务读取的行，在事务开始之前未删除。
-    **insert**操作。将新插入的行保存当前版本号为行版本号。
 
-    **delete**操作。将删除的行保存当前版本号为删除标识。
 
-    **update**操作。变为insert和delete操作的组合，insert的行保存当前版本号为行版本号，delete则保存当前版本号到原来的行作为删除标识。
 
-​		**通过MVCC策略，可以确保一个事务里面读取的是同一个数据库版本快照。**
 
-- 持久性:即事务完成后，对数据库数据的修改被持久化存储。
-  - 实现：**redolog。**事务的所有修改操作(增、删、改)，数据库都会生成一条redo日志记录到redo log.区别于undo log记录SQL语句、redo log记录的是事务对数据库的哪个数据页做了什么修改，属于物理日志。
-  - redo日志应用场景：数据库系统直接崩溃，需要进行恢复，一般数据库都会使用按时间点备份的策略，首先将数据库恢复到最近备份的时间点状态，之后读取该时间点之后的redo log记录，重新执行相应记录，达到最终恢复的目的。
-    
 
-<img src="./images/数据库的四个隔离级别.jpg" width="90%" align="center" ></img>
 
- 
+volatile和synchronized的区别
 
- 
+lock和synchronized的区别
 
-**索引**
+#### synchronized锁升级
 
-G1  CMS 垃圾回收器
-mysql 引擎，索引，锁，隔离级别，
+- 偏向锁：大多数情况下，锁不是竞争关系，而是同一个线程获取同一把锁，所以引入偏向锁。一个线程获取锁之后，对象回头会记录线程的id，以后该线程获取锁时，不用cas加锁解锁，只要测试下id是否等于该线程id，等于就表示获取锁，不等于就要看标志位是不是偏向锁，是偏向锁，就使用cas将对象头的偏向锁指向当前线程。缺点：如果线程存在竞争，锁撤销会有消耗
 
-#### char 和 varchar 
+- 轻量级锁：获取锁时，会在当前线程的栈帧中创建锁记录空间，将对象的mark work复制到记录空间，然后尝试cas将对象头的markword替换为指向所记录的指针，成功表示获取锁，失败使用自旋竞争获取锁。缺点：自旋消耗cpu
 
-varchar是可变的，但是在update的时候可能导致行变得更长
-
-当字符串是比较长的，更新次数比较少的时候使用varchar,短的使用char
-
-#### #怎么防止sql注入，什么时候用# 什么时候用$
-
-#通过编译的方式 将传的数据 加上引号，$直接拼接，所以可以防止sql注入
-
-当传入的表名是动态的，比如根据日期分表时候  用$传
-
-#### linux 常用命令
-
-#### 并发和并行
-
-#### 
-
-
-
-# 计算机网络
-
-## TCP/IP 原理
-
-TCP/IP 协议不是 TCP 和 IP 这两个协议的合称，而是指因特网整个 TCP/IP 协议族。从协议分层模型方面来讲，TCP/IP 由四个层次组成：网络接口层、网络层、传输层、应用层。
-
-<img src="./images/tcpip.png" width="70%" align="center" ></img>
-
-
-
-
-
-## **TCP UDP** 
-
-- TCP 是面向连接的协议，它提供可靠的报文传输和对上层应用的连接服务。为此，除了基本的数据传输外，它还有可靠性保证、流量控制、多路
-
-复用、优先权和安全性控制等功能。
-
-- UDP 是面向无连接的不可靠传输的协议，主要用于不需要 TCP 的排序和流量控制等功能的应用程序。
-
-## **三次握手**
-
-- 第一次握手：主机 A 发送位码为 syn＝1,随机产生 seq number=1234567 的数据包到服务器，主机 B由 SYN=1 知道，A 要求建立联机；
-
-- 第二次握手：主机 B 收到请求后要确认联机信息，向 A 发 送 ack number=( 主 机 A 的seq+1),syn=1,ack=1,随机产生 seq=7654321 的包
-
-- 第三次握手：主机 A 收到后检查 ack number 是否正确，即第一次发送的 seq number+1,以及位码ack 是否为 1，若正确，主机 A 会再发送 ack number=(主机 B 的 seq+1),ack=1，主机 B 收到后确认seq 值与 ack=1 则连接建立成功。
-
-<img src="./images/三次握手.png" width="100%" align="center" ></img>
-
-
-
-
-
-## 四次挥手
-
-TCP 建立连接要进行三次握手，而断开连接要进行四次。这是由于 TCP 的半关闭造成的。因为 TCP 连接是全双工的(即数据可在两个方向上同时传递)所以进行关闭时每个方向上都要单独进行关闭。这个单方向的关闭就叫半关闭。当一方完成它的数据发送任务，就发送一个 FIN 来向另一方通告将要终止这个方向的连接。
-
--  关闭客户端到服务器的连接：首先客户端 A 发送一个 FIN，用来关闭客户到服务器的数据传送，然后等待服务器的确认。其中终止标志位 FIN=1，序列号 seq=u
-
-- 服务器收到这个 FIN，它发回一个 ACK，确认号 ack 为收到的序号加 1。
-
--  关闭服务器到客户端的连接：也是发送一个 FIN 给客户端。
-
-- 客户段收到 FIN 后，并发回一个 ACK 报文确认，并将确认序号 seq 设置为收到序号加 1。 首先进行关闭的一方将执行主动关闭，而另一方执行被动关闭。
-
-
-
-
-
-<img src="./images/四次挥手.png" width="100%" align="center" ></img>
-
-
-
-<font color="blue">主机 A 发送 FIN 后，进入终止等待状态， 服务器 B 收到主机 A 连接释放报文段后，就立即给主机 A 发送确认，然后服务器 B 就进入 close-wait 状态，此时 TCP 服务器进程就通知高层应用进程，因而从 A 到 B 的连接就释放了。此时是“半关闭”状态。即 A 不可以发送给B，但是 B 可以发送给 A。此时，若 B 没有数据报要发送给 A 了，其应用进程就通知 TCP 释放连接，然后发送给 A 连接释放报文段，并等待确认。A 发送确认后，进入 time-wait，注意，此时 TCP 连接还没有释放掉，然后经过时间等待计时器设置的 2MSL 后，A 才进入到close 状态。</font>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# spring
-
-## Bean的生命周期
-
-
-
-
-
-
-
-
-
-
-
-# 算法
-
-<img src="./images/排序算法.png" width="80%" align="center" ></img>
-
-
-
-
-
-#### 冒泡排序
-
-- 比较相邻的元素。如果第一个比第二个大，就交换它们两个；
-- 对每一对相邻元素作同样的工作，从开始第一对到结尾的最后一对，这样在最后的元素应该会是最大的数；
-- 针对所有的元素重复以上的步骤，除了最后一个；
-
-```c++
-void Bubble_Sort(int *a, int len){
-	for (int i=0; i<len-1; i++){
-		for (int j=0; j<len-i-1; j++){
-			if (a[j]>a[j+1]){
-				int temp = a[j];
-				a[j] = a[j + 1];
-				a[j + 1] = temp;
-			}
-		}
-	}
-}
-```
-
-
-
-#### 选择排序
-
-- 每趟选择无序中的最小的
-
-```c++
-void Selection_Sort(int *a, int len){
-	int minIndex;
-	int temp;
-	for (int i=0; i<len-1; i++){
-		minIndex = i;
-		for (int j=i+1; j<len; j++){
-			if (a[j]<a[minIndex]){
-				minIndex = j;
-			}
-		}
-		temp = a[i];
-		a[i] = a[minIndex];
-		a[minIndex] = temp;
-	}
-}
-
-```
-
-
-
-#### 插入排序
-
-- 取出下一个元素，在已经排序的元素序列中从后向前扫描；
-- 如果该元素（已排序）大于新元素，将该元素移到下一位置；
-
-```c++
-void Inser_Sort(int a[], int len){
-    int j;
-    int current;
-    for(int i=0; i<len; i++){
-        j = i ;
-        current = a[i];
-        while(j>=0 && a[j-1]> current){
-            a[j] = a[j-1];
-            j--;
-        }
-        a[j] = current;
-    }
-}
-```
-
-#### 快速排序
-
-- 从数列中挑出一个元素，称为 “基准”（pivot）；
-- 重新排序数列，所有元素比基准值小的摆放在基准前面，所有元素比基准值大的摆在基准的后面（相同的数可以到任一边）。在这个分区退出之后，该基准就处于数列的中间位置。这个称为分区（partition）操作；
-- 递归地（recursive）把小于基准值元素的子数列和大于基准值元素的子数列排序。
-
-```c++
-int Partition(int A[],int low,int high){
-	int pivot=A[low];//第一个元素作为基准
-	while(low<high){
-		while(low<high && A[high]>=pivot) high--;
-		A[low]=A[high];
-		while(low<high && A[low]<=pivot) low++;
-		A[high]=A[low];
-	} 
-	A[low]=pivot;
-
-	return low;
-}
-void QuickSort(int A[],int low,int high){
-	if(low<high){
-		int pivotpos=Partition(A,low,high);
-		QuickSort(A,low,pivotpos-1);
-		QuickSort(A,pivotpos+1,high);
-	}
-}
-```
-
-#### 迭代法：先序遍历
-
-```c++
-class Solution {
-public:
-    vector<int> preorderTraversal(TreeNode* root) {
-        stack<TreeNode*> st;
-        vector<int> result;
-        if (root == NULL) return result;
-        st.push(root);
-        while (!st.empty()) {
-            TreeNode* node = st.top();                       // 中
-            st.pop();
-            result.push_back(node->val);
-            if (node->right) st.push(node->right);           // 右（空节点不入栈）
-            if (node->left) st.push(node->left);             // 左（空节点不入栈）
-        }
-        return result;
-    }
-};
-```
-
-#### 根节点到指定节点的路径
-
-```C++
-public static boolean getPathToTarget(TreeNode node, TreeNode target, 
-	LinkedList<TreeNode> path) {
-    if (node == null) 
-        return false;
-
-    path.push(node);
-
-    if (node == target)
-        return true;
-    // find in left tree
-    if (getPathToTarget(node.left, target, path)) 
-        return true; 
-    // find in right tree
-    if (getPathToTarget(node.right, target, path))
-        return true;
-
-    // this node is not in the path of target
-    // cause leftchild rightchild and itself do not have target node
-    path.pop();
-    return false;
-}
-```
-
-
-
-
+- 重量级锁：没自旋，不会消耗cpu。缺点：线程阻塞，响应时间慢。
 
 ## ReentrantLock
 
@@ -1266,7 +932,7 @@ https://blog.51cto.com/zhaoyanjun/4048022
 
 
 
-原型模式
+
 
 
 
@@ -1564,7 +1230,31 @@ private T setInitialValue() {
 
 setInitialValue方法调用了initialValue()方法，所以可以重写这个方法，来创建map 设置value,最后返回value
 
+```java
+void createMap(Thread t, T firstValue) {
+    t.threadLocals = new ThreadLocalMap(this, firstValue);
+}
+```
 
+第一次调用时候发现map为空，会调用createMap方法，创建map,为thread的threadLocals赋值。
+
+## ThreadLocal 内存泄露问题是怎么导致的？
+
+`ThreadLocalMap` 中使用的 key 为 `ThreadLocal` 的弱引用，而 value 是强引用。所以，如果 `ThreadLocal` 没有被外部强引用的情况下，在垃圾回收的时候，key 会被清理掉，而 value 不会被清理掉。
+
+这样一来，`ThreadLocalMap` 中就会出现 key 为 null 的 Entry。假如我们不做任何措施的话，value 永远无法被 GC 回收，这个时候就可能会产生内存泄露。`ThreadLocalMap` 实现中已经考虑了这种情况，在调用 `set()`、`get()`、`remove()` 方法的时候，会清理掉 key 为 null 的记录。使用完 `ThreadLocal`方法后 最好手动调用`remove()`方法
+
+```java
+static class Entry extends WeakReference<ThreadLocal<?>> {
+    /** The value associated with this ThreadLocal. */
+    Object value;
+
+    Entry(ThreadLocal<?> k, Object v) {
+        super(k);
+        value = v;
+    }
+}
+```
 
 
 
@@ -1819,6 +1509,19 @@ class MyRunnable implements Runnable {
 }
 ```
 
+#### 线程池的拒绝策略
+
+- **CallerRunsPolicy**: 当触发拒绝策略，只要线程池没有关闭的话，则使用调用线程直接运行任务。一般并发比较小，性能要求不高，不允许失败。但是，由
+
+  于调用者自己运行任务，如果任务提交速度过快，可能导致程序阻塞，性能效率上必然的损失较大
+
+- **AbortPolicy**: 丢弃任务，并抛出拒绝执行 RejectedExecutionException 异常信息。线程池默认的拒绝策略。必须处理好抛出的异常，否则会打断当前的执
+
+行流程，影响后续的任务执行。
+
+- **DiscardPolicy**: 直接丢弃，其他啥都没有
+- **DiscardOldestPolicy**: 当触发拒绝策略，只要线程池没有关闭的话，丢弃阻塞队列 workQueue 中最老的一个任务，并将新任务加入
+
 #### 推荐书籍
 
 1. 编译原理
@@ -1830,7 +1533,483 @@ class MyRunnable implements Runnable {
 
 
 
-# 面试问题
+# **数据库**
+
+[ 一文详解脏读、不可重复读、幻读 ]（https://baijiahao.baidu.com/s?id=1717095300761675602&wfr=spider&for=pc）
+
+**脏读：**
+
+脏读又称无效数据的读出，是指在数据库访问中，事务T1将某一值修改，然后事务T2读取该值，此后T1因为某种原因撤销对该值的修改，这就导致了T2所读取到的数据是无效的，值得注意的是，脏读一般是针对于update操作的。
+
+**不可重复读**
+
+事务 A 多次读取同一数据，但事务 B 在事务A多次读取的过程中，对数据作了更新并提交，导致事务A，结果 不一致。
+
+**幻读**
+
+一个事务内部，第一次查询某数据是存在的，下一次查，不存在了，仿佛出现了幻觉。
+
+
+
+#### 数据库事务的四大特性
+
+- 原子性:事务的所有SQL操作作为原子工作单元执行，要么全部执行，要么全部不执行；
+  - 实现：通过**undolog**。事务的所有修改操作(增、删、改)的相反操作都会写入undo log,比如事务执行了一条insert语句，那么undo log就会记录一条相应的delete语句。所以undo log是一个逻辑文件，记录的是相应的SQL语句一旦由于故障，导致事务无法成功提交，系统则会执行undo log中相应的撤销操作，达到事务回滚的目的。
+
+- 一致性:事务完成后，所有数据的状态都是一致的，即A账户只要减去了100，B账户则必定加上了100；
+
+- 隔离性:如果有多个事务并发执行，每个事务作出的修改必须与其他事务隔离；
+
+  - 可重复读（已提交读）：
+
+    **数据的读取不加锁，数据的写入、修改、删除需要加行锁，可以克服脏读，但无法避免不可重复读**
+
+    <img src="./images/脏读.jpg" width="40%" align="left" ></img>
+
+    ​		**使用加锁策略后，T1写数据x时，先获取了x的锁，导致T2的读操作等待，T1进行数据回滚后，释放锁，T2可以继续读取原来数据，不存在读取到脏数据的可能。**
+
+  - 可重复读(允许[幻读](https://so.csdn.net/so/search?q=幻读&spm=1001.2101.3001.7020))
+
+    实现策略：**MVCC(多个版本行控制)策略**
+
+    下图是一个不可重复读的场景。由于T1的更新操作，导致T2两次读取的数据不一致。
+
+    单纯加行锁是无法解决的，T2先读取x值，T1之后经过加锁、解锁步骤，更新x的值，提交事务。T2再读的话，读出来的是T1更新后的值，两次读取结果不一致。
+
+    <img src="./images/不可重复读.png" width="40%" align="left" ></img>
+
+    **MVCC**
+
+    ​		前面讲的行级锁是一个悲观锁，而MVCC是一个乐观锁，乐观锁在一定程度上可以避免加锁操作，因此开销更低。InnoDB的MVCC实现，是通过保存数据在某个时间点的快照来实现的。一个事务，不管其执行多长时间，其内部看到的数据是一致的。也就是事务在执行的过程中不会相互影响。
+
+    具体实现如下：
+
+    ​		MVCC，通过在每行记录后面保存两个隐藏的列来实现：一个保存了行的创建时间，一个保存行的过期时间（删除时间），当然，这里的时间并不是时间戳，而是系统版本号，每开始一个新的事务，系统版本号就会递增。
+
+    **selelct**操作只查找版本早于（包含等于）当前事务版本的数据行。可以确保事务读取的行，要么是事务开始前就已存在，或者事务自身插入或修改的记录。行的删除版本要么未定义，要么大于当前事务版本号。可以确保事务读取的行，在事务开始之前未删除。
+    **insert**操作。将新插入的行保存当前版本号为行版本号。
+
+    **delete**操作。将删除的行保存当前版本号为删除标识。
+
+    **update**操作。变为insert和delete操作的组合，insert的行保存当前版本号为行版本号，delete则保存当前版本号到原来的行作为删除标识。
+
+​		**通过MVCC策略，可以确保一个事务里面读取的是同一个数据库版本快照。**
+
+- 持久性:即事务完成后，对数据库数据的修改被持久化存储。
+  - 实现：**redolog。**事务的所有修改操作(增、删、改)，数据库都会生成一条redo日志记录到redo log.区别于undo log记录SQL语句、redo log记录的是事务对数据库的哪个数据页做了什么修改，属于物理日志。
+  - redo日志应用场景：数据库系统直接崩溃，需要进行恢复，一般数据库都会使用按时间点备份的策略，首先将数据库恢复到最近备份的时间点状态，之后读取该时间点之后的redo log记录，重新执行相应记录，达到最终恢复的目的。
+    
+
+<img src="./images/数据库的四个隔离级别.jpg" width="90%" align="center" ></img>
+
+ 
+
+ 
+
+**索引**
+
+G1  CMS 垃圾回收器
+mysql 引擎，索引，锁，隔离级别，
+
+#### char 和 varchar 
+
+varchar是可变的，但是在update的时候可能导致行变得更长
+
+当字符串是比较长的，更新次数比较少的时候使用varchar,短的使用char
+
+#### #怎么防止sql注入，什么时候用# 什么时候用$
+
+#通过编译的方式 将传的数据 加上引号，$直接拼接，所以可以防止sql注入
+
+当传入的表名是动态的，比如根据日期分表时候  用$传
+
+#### 索引下推
+
+联合索引（a,b,c），查询where a=1,c=3; 
+
+如果没有索引下推，那么使用a索引，然后回表
+
+如果有索引下推，会使用联合索引
+
+#### 索引优化
+
+- 独立的列
+
+  在进行查询时，索引列不能是表达式的一部分，也不能是函数的参数，否则无法使用索引。比如：
+
+  ```sql
+  SELECT actor_id FROM sakila.actor WHERE actor_id + 1 = 5;
+  ```
+
+- 多列索引
+
+  在需要使用多个列作为条件进行查询时，使用多列索引比使用多个单列索引性能更好。例如下面的语句中，最好把 actor_id 和 film_id 设置为多列索引。
+
+  ```sql
+  SELECT film_id, actor_ id FROM sakila.film_actor
+  WHERE actor_id = 1 AND film_id = 1;
+  ```
+
+- 索引列的顺序
+
+  让选择性最强的索引列放在前面，索引的选择性是指: 不重复的索引值和记录总数的比值。最大值为 1，此时每个记录都有唯一的索引与其对应。
+
+- 前缀索引
+
+  对于 BLOB、TEXT 和 VARCHAR 类型的列，必须使用前缀索引，只索引开始的部分字符。
+
+性能优化：
+
+​	limit 和避免select *
+
+#### 分库分表
+
+水平切分：列类型和名称完全一样，多条记录切分成不同的表
+
+垂直切分：切分列  id一样
+
+#### 数据库的数据类型
+
+-  整型
+
+TINYINT, SMALLINT, MEDIUMINT, INT, BIGINT 分别使用 8, 16, 24, 32, 64 位存储空间，一般情况下越小的列越好。
+
+INT(11) 中的数字只是规定了交互工具显示字符的个数，对于存储和计算来说是没有意义的。
+
+- 浮点数
+
+FLOAT 和 DOUBLE 为浮点类型，DECIMAL 为高精度小数类型。CPU 原生支持浮点运算，但是不支持 DECIMAl 类型的计算，因此 DECIMAL 的计算比浮点类型需要更高的代价。
+
+FLOAT、DOUBLE 和 DECIMAL 都可以指定列宽，例如 DECIMAL(18, 9) 表示总共 18 位，取 9 位存储小数部分，剩下 9 位存储整数部分。
+
+- 字符串
+
+主要有 CHAR 和 VARCHAR 两种类型，一种是定长的，一种是变长的。
+
+VARCHAR 这种变长类型能够节省空间，因为只需要存储必要的内容。但是在执行 UPDATE 时可能会使行变得比原来长，当超出一个页所能容纳的大小时，就要执行额外的操作。MyISAM 会将行拆成不同的片段存储，而 InnoDB 则需要分裂页来使行放进页内。
+
+VARCHAR 会保留字符串末尾的空格，而 CHAR 会删除。
+
+#### 数据库恢复
+
+#### 主从复制
+
+- **binlog 线程** : 负责将主服务器上的数据更改写入二进制日志中。
+- **I/O 线程** : 负责从主服务器上读取二进制日志，并写入从服务器的中继日志中。
+- **SQL 线程** : 负责读取中继日志并重放其中的 SQL 语句。
+
+<font color="red">主服务器处理写操作以及实时性要求比较高的读操作，而从服务器处理读操作。</font>
+
+**读写分离能提高性能的原因在于:**
+
+- 主从服务器负责各自的读和写，极大程度缓解了锁的争用；
+- 从服务器可以使用 MyISAM，提升查询性能以及节约系统开销；
+- 增加冗余，提高可用性。
+
+#### redolog、binlog、undolog对比
+
+https://javaguide.cn/database/mysql/mysql-logs.html#%E5%89%8D%E8%A8%80
+
+`redo log` 它是物理日志，记录内容是“在某个数据页上做了什么修改”，属于 `InnoDB` 存储引擎。
+
+而 `binlog` 是逻辑日志，记录内容是语句的原始逻辑，类似于“给 ID=2 这一行的 c 字段加 1”，属于`MySQL Server` 层。
+
+<img src="./images/binlog.png" width="90%" align="center" />
+
+如果没有两阶段提交，当写入完成redolog之后，没写入binlog，发生异常，再次对数据库恢复时，从机主机数据不一致，为了解决这个问题，使用两阶段提交。
+
+情况1:使用**两阶段提交**后，写入`binlog`时发生异常也不会有影响，因为`MySQL`根据`redo log`日志恢复数据时，发现`redo log`还处于`prepare`阶段，并且没有对应`binlog`日志，就会回滚该事务。
+
+情况2：`redo log`设置`commit`阶段发生异常，那会不会回滚事务呢？
+
+并不会回滚事务，它会执行上图框住的逻辑，虽然`redo log`是处于`prepare`阶段，但是能通过事务`id`找到对应的`binlog`日志，所以`MySQL`认为是完整的，就会提交事务恢复数据
+
+
+
+
+
+# 计算机网络
+
+## TCP/IP 原理
+
+TCP/IP 协议不是 TCP 和 IP 这两个协议的合称，而是指因特网整个 TCP/IP 协议族。从协议分层模型方面来讲，TCP/IP 由四个层次组成：网络接口层、网络层、传输层、应用层。
+
+<img src="./images/tcpip.png" width="70%" align="center" ></img>
+
+
+
+
+
+## **TCP UDP** 
+
+- TCP 是面向连接的协议，它提供可靠的报文传输和对上层应用的连接服务。为此，除了基本的数据传输外，它还有可靠性保证、流量控制、多路
+
+复用、优先权和安全性控制等功能。
+
+- UDP 是面向无连接的不可靠传输的协议，主要用于不需要 TCP 的排序和流量控制等功能的应用程序。
+
+## **三次握手**
+
+- 第一次握手：主机 A 发送位码为 syn＝1,随机产生 seq number=1234567 的数据包到服务器，主机 B由 SYN=1 知道，A 要求建立联机；
+
+- 第二次握手：主机 B 收到请求后要确认联机信息，向 A 发 送 ack number=( 主 机 A 的seq+1),syn=1,ack=1,随机产生 seq=7654321 的包
+
+- 第三次握手：主机 A 收到后检查 ack number 是否正确，即第一次发送的 seq number+1,以及位码ack 是否为 1，若正确，主机 A 会再发送 ack number=(主机 B 的 seq+1),ack=1，主机 B 收到后确认seq 值与 ack=1 则连接建立成功。
+
+<img src="./images/三次握手.png" width="100%" align="center" ></img>
+
+
+
+
+
+## 四次挥手
+
+TCP 建立连接要进行三次握手，而断开连接要进行四次。这是由于 TCP 的半关闭造成的。因为 TCP 连接是全双工的(即数据可在两个方向上同时传递)所以进行关闭时每个方向上都要单独进行关闭。这个单方向的关闭就叫半关闭。当一方完成它的数据发送任务，就发送一个 FIN 来向另一方通告将要终止这个方向的连接。
+
+-  关闭客户端到服务器的连接：首先客户端 A 发送一个 FIN，用来关闭客户到服务器的数据传送，然后等待服务器的确认。其中终止标志位 FIN=1，序列号 seq=u
+
+- 服务器收到这个 FIN，它发回一个 ACK，确认号 ack 为收到的序号加 1。
+
+-  关闭服务器到客户端的连接：也是发送一个 FIN 给客户端。
+
+- 客户段收到 FIN 后，并发回一个 ACK 报文确认，并将确认序号 seq 设置为收到序号加 1。 首先进行关闭的一方将执行主动关闭，而另一方执行被动关闭。
+
+
+
+
+
+<img src="./images/四次挥手.png" width="100%" align="center" ></img>
+
+
+
+<font color="blue">主机 A 发送 FIN 后，进入终止等待状态， 服务器 B 收到主机 A 连接释放报文段后，就立即给主机 A 发送确认，然后服务器 B 就进入 close-wait 状态，此时 TCP 服务器进程就通知高层应用进程，因而从 A 到 B 的连接就释放了。此时是“半关闭”状态。即 A 不可以发送给B，但是 B 可以发送给 A。此时，若 B 没有数据报要发送给 A 了，其应用进程就通知 TCP 释放连接，然后发送给 A 连接释放报文段，并等待确认。A 发送确认后，进入 time-wait，注意，此时 TCP 连接还没有释放掉，然后经过时间等待计时器设置的 2MSL 后，A 才进入到close 状态。</font>
+
+
+
+
+
+
+
+## GET 方法
+
+**请注意，查询字符串（名称/值对）是在 GET 请求的 URL 中发送的：**
+
+/test/demo_form.php**?name1=value1&name2=value2**
+
+**有关 GET 请求的其他一些注释：**
+
+- **GET 请求可被缓存**
+- GET 请求保留在浏览器历史记录中
+- GET 请求可被收藏为书签
+- GET 请求不应在处理敏感数据时使用
+- **GET 请求有长度限制**
+- **GET 请求只应当用于取回数据**
+
+------
+
+## POST 方法
+
+**请注意，查询字符串（名称/值对）是在 POST 请求的 HTTP 消息主体中发送的：**
+
+POST /test/demo_form.php HTTP/1.1
+Host: runoob.com
+**name1=value1&name2=value2**
+
+**有关 POST 请求的其他一些注释：**
+
+- **POST 请求不会被缓存**
+- POST 请求不会保留在浏览器历史记录中
+- POST 不能被收藏为书签
+- **POST 请求对数据长度没有要求**
+
+
+
+## MySQL中的char和varchar
+
+> 在MYSQL中，char是指:使用指定长度的固定长度表示字符串的一种字段类型；比如char（8），则数据库会使用固定的1个字节(八位）来存储数据，不足8位的字符串在其后补空字符。
+> varchar(M)是一种比char更加灵活的数据类型，同样用于表示[字符](https://link.zhihu.com/?target=https%3A//baike.baidu.com/item/%E5%AD%97%E7%AC%A6)数据，但是varchar可以保存可变长度的字符串。其中M代表该数据类型所允许保存的字符串的最大长度，只要长度小于该最大值的字符串都可以被保存在该数据类型中。因此，对于那些难以估计确切长度的[数据对象](https://link.zhihu.com/?target=https%3A//baike.baidu.com/item/%E6%95%B0%E6%8D%AE%E5%AF%B9%E8%B1%A1/3227125)来说，使用varchar数据类型更加明智。MySQL4.1以前,varchar数据类型所支持的最大长度255,5.0以上版本支持65535字节长度,utf8编码下最多支持21843个字符(不为空)
+
+char：定长，效率高，一般用于固定长度的表单提交数据存储；例如：身份证号，手机号，电话，密码等。
+
+varchar：不定长，效率偏低。
+
+
+
+
+
+
+
+# spring
+
+## Bean的生命周期
+
+
+
+
+
+
+
+
+
+
+
+# 算法
+
+<img src="./images/排序算法.png" width="80%" align="center" ></img>
+
+
+
+## 排序算法
+
+### 冒泡排序
+
+- 比较相邻的元素。如果第一个比第二个大，就交换它们两个；
+- 对每一对相邻元素作同样的工作，从开始第一对到结尾的最后一对，这样在最后的元素应该会是最大的数；
+- 针对所有的元素重复以上的步骤，除了最后一个；
+
+```c++
+void Bubble_Sort(int *a, int len){
+	for (int i=0; i<len-1; i++){
+		for (int j=0; j<len-i-1; j++){
+			if (a[j]>a[j+1]){
+				int temp = a[j];
+				a[j] = a[j + 1];
+				a[j + 1] = temp;
+			}
+		}
+	}
+}
+```
+
+
+
+### 选择排序
+
+- 每趟选择无序中的最小的
+
+```c++
+void Selection_Sort(int *a, int len){
+	int minIndex;
+	int temp;
+	for (int i=0; i<len-1; i++){
+		minIndex = i;
+		for (int j=i+1; j<len; j++){
+			if (a[j]<a[minIndex]){
+				minIndex = j;
+			}
+		}
+		temp = a[i];
+		a[i] = a[minIndex];
+		a[minIndex] = temp;
+	}
+}
+
+```
+
+
+
+### 插入排序
+
+- 取出下一个元素，在已经排序的元素序列中从后向前扫描；
+- 如果该元素（已排序）大于新元素，将该元素移到下一位置；
+
+```c++
+void Inser_Sort(int a[], int len){
+    int j;
+    int current;
+    for(int i=0; i<len; i++){
+        j = i ;
+        current = a[i];
+        while(j>=0 && a[j-1]> current){
+            a[j] = a[j-1];
+            j--;
+        }
+        a[j] = current;
+    }
+}
+```
+
+### 快速排序
+
+- 从数列中挑出一个元素，称为 “基准”（pivot）；
+- 重新排序数列，所有元素比基准值小的摆放在基准前面，所有元素比基准值大的摆在基准的后面（相同的数可以到任一边）。在这个分区退出之后，该基准就处于数列的中间位置。这个称为分区（partition）操作；
+- 递归地（recursive）把小于基准值元素的子数列和大于基准值元素的子数列排序。
+
+```c++
+int Partition(int A[],int low,int high){
+	int pivot=A[low];//第一个元素作为基准
+	while(low<high){
+		while(low<high && A[high]>=pivot) high--;
+		A[low]=A[high];
+		while(low<high && A[low]<=pivot) low++;
+		A[high]=A[low];
+	} 
+	A[low]=pivot;
+
+	return low;
+}
+void QuickSort(int A[],int low,int high){
+	if(low<high){
+		int pivotpos=Partition(A,low,high);
+		QuickSort(A,low,pivotpos-1);
+		QuickSort(A,pivotpos+1,high);
+	}
+}
+```
+
+### 迭代法：先序遍历
+
+```c++
+class Solution {
+public:
+    vector<int> preorderTraversal(TreeNode* root) {
+        stack<TreeNode*> st;
+        vector<int> result;
+        if (root == NULL) return result;
+        st.push(root);
+        while (!st.empty()) {
+            TreeNode* node = st.top();                       // 中
+            st.pop();
+            result.push_back(node->val);
+            if (node->right) st.push(node->right);           // 右（空节点不入栈）
+            if (node->left) st.push(node->left);             // 左（空节点不入栈）
+        }
+        return result;
+    }
+};
+```
+
+## 其他
+
+### 根节点到指定节点的路径
+
+```C++
+public static boolean getPathToTarget(TreeNode node, TreeNode target, 
+	LinkedList<TreeNode> path) {
+    if (node == null) 
+        return false;
+
+    path.push(node);
+
+    if (node == target)
+        return true;
+    // find in left tree
+    if (getPathToTarget(node.left, target, path)) 
+        return true; 
+    // find in right tree
+    if (getPathToTarget(node.right, target, path))
+        return true;
+
+    // this node is not in the path of target
+    // cause leftchild rightchild and itself do not have target node
+    path.pop();
+    return false;
+}
+```
+
+
+
+# 实习面试
 
 #### 项目：微信支付流程（回调单号有什么用），上传图片流程，微信小程序怎么获取用户权限的
 
@@ -2078,13 +2257,7 @@ https://www.cnblogs.com/hollischuang/p/14260801.html
 
 9、浏览器发送请求获取嵌入在 HTML 中的资源（如图片、音频、视频、CSS、JS等等）
 
-#### 索引下推
 
-联合索引（a,b,c），查询where a=1,c=3; 
-
-如果没有索引下推，那么使用a索引，然后回表
-
-如果有索引下推，会使用联合索引
 
 #### 部署项目
 
@@ -2146,141 +2319,35 @@ synchronized
 
 #### 数据库事务 ACID  隔离级别  举例
 
-#### synchronized锁升级
+# 框架
 
-#### 线程池的拒绝策略
+## springboot
 
-- **CallerRunsPolicy**: 当触发拒绝策略，只要线程池没有关闭的话，则使用调用线程直接运行任务。一般并发比较小，性能要求不高，不允许失败。但是，由
+## spring
 
-  于调用者自己运行任务，如果任务提交速度过快，可能导致程序阻塞，性能效率上必然的损失较大
+## mybatis
 
-- **AbortPolicy**: 丢弃任务，并抛出拒绝执行 RejectedExecutionException 异常信息。线程池默认的拒绝策略。必须处理好抛出的异常，否则会打断当前的执
-
-行流程，影响后续的任务执行。
-
-- **DiscardPolicy**: 直接丢弃，其他啥都没有
-- **DiscardOldestPolicy**: 当触发拒绝策略，只要线程池没有关闭的话，丢弃阻塞队列 workQueue 中最老的一个任务，并将新任务加入
-
-
-
-# springboot
-
-# spring
-
-# mybatis
-
-# redis
+## redis
 
 # 设计模式
+
+原型模式
 
 # leetcode(java)
 
 #### JVM调优
 
-
-
-#### 索引优化
-
-- 独立的列
-
-  在进行查询时，索引列不能是表达式的一部分，也不能是函数的参数，否则无法使用索引。比如：
-
-  ```sql
-  SELECT actor_id FROM sakila.actor WHERE actor_id + 1 = 5;
-  ```
-
-- 多列索引
-
-  在需要使用多个列作为条件进行查询时，使用多列索引比使用多个单列索引性能更好。例如下面的语句中，最好把 actor_id 和 film_id 设置为多列索引。
-
-  ```sql
-  SELECT film_id, actor_ id FROM sakila.film_actor
-  WHERE actor_id = 1 AND film_id = 1;
-  ```
-
--  索引列的顺序
-
-  让选择性最强的索引列放在前面，索引的选择性是指: 不重复的索引值和记录总数的比值。最大值为 1，此时每个记录都有唯一的索引与其对应。
-
-- 前缀索引
-
-  对于 BLOB、TEXT 和 VARCHAR 类型的列，必须使用前缀索引，只索引开始的部分字符。
-
-
-
-
-
-性能优化：
-
-​	limit 和避免select *
-
 #### 线程顺序执行
 
 #### condition唤醒线程 多条件
 
-#### 分库分表
-
-水平切分：列类型和名称完全一样，多条记录切分成不同的表
-
-垂直切分：切分列  id一样
-
-#### 数据库的数据类型
-
--  整型
-
-TINYINT, SMALLINT, MEDIUMINT, INT, BIGINT 分别使用 8, 16, 24, 32, 64 位存储空间，一般情况下越小的列越好。
-
-INT(11) 中的数字只是规定了交互工具显示字符的个数，对于存储和计算来说是没有意义的。
-
-- 浮点数
-
-FLOAT 和 DOUBLE 为浮点类型，DECIMAL 为高精度小数类型。CPU 原生支持浮点运算，但是不支持 DECIMAl 类型的计算，因此 DECIMAL 的计算比浮点类型需要更高的代价。
-
-FLOAT、DOUBLE 和 DECIMAL 都可以指定列宽，例如 DECIMAL(18, 9) 表示总共 18 位，取 9 位存储小数部分，剩下 9 位存储整数部分。
-
-- 字符串
-
-主要有 CHAR 和 VARCHAR 两种类型，一种是定长的，一种是变长的。
-
-VARCHAR 这种变长类型能够节省空间，因为只需要存储必要的内容。但是在执行 UPDATE 时可能会使行变得比原来长，当超出一个页所能容纳的大小时，就要执行额外的操作。MyISAM 会将行拆成不同的片段存储，而 InnoDB 则需要分裂页来使行放进页内。
-
-VARCHAR 会保留字符串末尾的空格，而 CHAR 会删除。
-
-#### 数据库恢复
-
-#### 主从复制
-
-- **binlog 线程** : 负责将主服务器上的数据更改写入二进制日志中。
-- **I/O 线程** : 负责从主服务器上读取二进制日志，并写入从服务器的中继日志中。
-- **SQL 线程** : 负责读取中继日志并重放其中的 SQL 语句。
-
-<font color="red">主服务器处理写操作以及实时性要求比较高的读操作，而从服务器处理读操作。</font>
-
-**读写分离能提高性能的原因在于:**
-
-- 主从服务器负责各自的读和写，极大程度缓解了锁的争用；
-- 从服务器可以使用 MyISAM，提升查询性能以及节约系统开销；
-- 增加冗余，提高可用性。
-
-#### redolog、binlog、undolog对比
-
-https://javaguide.cn/database/mysql/mysql-logs.html#%E5%89%8D%E8%A8%80
-
-`redo log` 它是物理日志，记录内容是“在某个数据页上做了什么修改”，属于 `InnoDB` 存储引擎。
-
-而 `binlog` 是逻辑日志，记录内容是语句的原始逻辑，类似于“给 ID=2 这一行的 c 字段加 1”，属于`MySQL Server` 层。
-
-<img src="./images/binlog.png" width="90%" align="center" />
-
-如果没有两阶段提交，当写入完成redolog之后，没写入binlog，发生异常，再次对数据库恢复时，从机主机数据不一致，为了解决这个问题，使用两阶段提交。
-
-情况1:使用**两阶段提交**后，写入`binlog`时发生异常也不会有影响，因为`MySQL`根据`redo log`日志恢复数据时，发现`redo log`还处于`prepare`阶段，并且没有对应`binlog`日志，就会回滚该事务。
-
-情况2：`redo log`设置`commit`阶段发生异常，那会不会回滚事务呢？
-
-并不会回滚事务，它会执行上图框住的逻辑，虽然`redo log`是处于`prepare`阶段，但是能通过事务`id`找到对应的`binlog`日志，所以`MySQL`认为是完整的，就会提交事务恢复数据
 
 
+#### linux 常用命令
+
+#### 并发和并行
+
+#### 
 
 #### NIO
 
@@ -2311,7 +2378,80 @@ https://javaguide.cn/database/mysql/mysql-logs.html#%E5%89%8D%E8%A8%80
 
 
 
+# 秋招面试
 
+### 怎么生成解析树
+
+### ![parser解析](images/parser解析.jpg)
+
+### 路由打分机制
+
+![query (1)](images/query (1).jpg)
+
+### 接入管理怎么控制能不能查询到(白名单，黑名单)
+
+ @文件
+
+### 查询的语句格式
+
+```json
+{
+	"metrics": [{
+		"name": "cost",
+		"default_value": 0
+	}],
+	"dimensions": [{
+		"name": "ad_id"
+	}],
+	"join_fields": [{
+		"name": "status",
+		"default_value": 0
+	}],
+	"query_source": {
+		"type": 2,
+		"name": "core_stat"
+	},
+	"filters": {
+		"relationship_type": 1,
+		"conditions": [{
+			"field": "advertiser_id",
+			"condition_operator": 7,
+			"values": ["1111"]
+		}, {
+			"field": "stat_time",
+			"condition_operator": 9,
+			"values": ["1609430400000", "1609516800000"]
+		}]
+	},
+	"having_filters": {
+		"relationship_type": 1,
+		"conditions": [{
+			"field": "cost",
+			"condition_operator": 5,
+			"values": ["0"]
+		}]
+	},
+	"order_by": [{
+		"field": "cost",
+		"type": 0
+	}],
+	"page": {
+		"offset": 0,
+		"limit": 10
+	},
+	"hints": {
+		"planner.statistics_total_count": "true"
+	}
+}
+```
+
+
+
+### 生成看板具体流程
+
+### 聚合条件
+
+### hdfs存储格式
 
 ​	
 

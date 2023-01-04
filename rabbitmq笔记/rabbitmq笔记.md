@@ -1,3 +1,13 @@
+# Docker 启动rabbitmq
+
+```linux
+docker run -e RABBITMQ_DEFAULT_USER=sz -e RABBITMQ_DEFAULT_PASS=java --name mq -p 15672:15672 -p 5672:5672 -d rabbitmq:3-management
+```
+
+
+
+
+
 # 入门
 
 ## 消息生产者

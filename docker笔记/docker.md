@@ -296,8 +296,7 @@ docker rmi hello-world
 
 ## 创建镜像
 
-- 1、从已经创建的容器中更新镜像，并且提交这个镜像
-- 2、使用 Dockerfile 指令来创建一个新的镜像
+**1、从已经创建的容器中更新镜像，并且提交这个镜像**
 
 ```
 docker commit -m="has update" -a="runoob" e218edb10161 runoob/ubuntu:v2
@@ -312,7 +311,50 @@ docker commit -m="has update" -a="runoob" e218edb10161 runoob/ubuntu:v2
 docker run -t -i runoob/ubuntu:v2 /bin/bash          //使用我们的新镜像 runoob/ubuntu 来启动一个容器
 ```
 
+- **-i**  交互式，但是，比如创建了两个mysql容器，就会出现端口冲突，需要更改端口映射。（会打包配置，数据不会复制）
+
+- **-P :**是容器内部端口**随机**映射到主机的端口。
+- **-p :** 是容器内部端口绑定到**指定**的主机端口。
+
+```linux
+sudo docker run -d -p 3307:3306 new_mysql
+# 3307  主机端口
+# 3306  容器端口
+# new_mysql 镜像名
+```
+
+
+
+**2、使用 Dockerfile 指令来创建一个新的镜像**
+
 另一种比较麻烦  通过dockerfile   不介绍了
+
+# Docker 容器连接
+
+<font color="red" size="5px"><u>创建容器时指定!!!</u></font>
+
+## 端口映射
+
+- **-P :**是容器内部端口**随机**映射到主机的端口。
+- **-p :** 是容器内部端口绑定到**指定**的主机端口。
+
+```linux
+sudo docker run -d -p 3307:3306 new_mysql
+```
+
+## 网络地址映射
+
+指定容器绑定的网络地址
+
+```linux
+docker run -d -p 127.0.0.1:3307:3306 new_mysql
+```
+
+这样主机可以通过127.0.0.1:3307访问
+
+
+
+
 
 
 
